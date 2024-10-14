@@ -1,7 +1,7 @@
 import json
 from collections import OrderedDict
 
-from .MmcConfig_UI import Ui_Dialog
+from signal_browser.MmcConfig_UI import Ui_Dialog
 from PySide6 import QtWidgets
 from PySide6.QtCore import QSettings
 from PySide6.QtGui import QAction

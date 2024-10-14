@@ -8,7 +8,7 @@ import pandas as pd
 from PySide6 import QtCore
 from PySide6.QtCore import QMutex, QObject, QRunnable, Signal
 
-from .utils import TimeConversionUtils
+from signal_browser.utils import TimeConversionUtils
 
 
 class RTILogReader:
@@ -175,6 +175,10 @@ class MultiThreaded_RTI_Reader(QRunnable):
         else:
             df.drop("json_extract(rti_json_sample, '$.timestamp')", axis=1, inplace=True)
             df.set_index("SampleInfo_reception_timestamp", inplace=True)
+
+        if df.size == 1:
+            return df
+
         df = df.squeeze()
         df.sort_index(inplace=True)
         return df

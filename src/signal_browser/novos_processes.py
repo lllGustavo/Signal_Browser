@@ -3,7 +3,7 @@ import sqlite3
 from datetime import timedelta
 import plotly.express as px
 import pandas as pd
-from .utils import TimeConversionUtils
+from signal_browser.utils import TimeConversionUtils
 
 
 class NOVOSProcesses:

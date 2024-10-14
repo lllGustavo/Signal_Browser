@@ -1,4 +1,4 @@
-import json
+import datetime
 import pathlib
 import sqlite3
 
@@ -9,19 +9,19 @@ import plotly.graph_objects as go
 from PySide6 import QtCore, QtGui, QtWebEngineWidgets, QtWidgets
 from PySide6.QtCore import QSortFilterProxyModel
 from PySide6.QtGui import QPalette
+from PySide6.QtWidgets import QLabel
 
-from .colorize_delegate import ColorizeDelegate
-from .file_type import FileType
-from .mmc_processes import MMCProcesses
-from .my_custom_classes import CustomStandardItem, CustomStandardItemModel
-from .novos_processes import NOVOSProcesses
-from .plclog_reader import PlcLogReader_Async
-from .qt_dash import DashThread
-from .rtilog_reader import MultiThreaded_RTI_Reader, RTILogReader
-from .tdmlog_reader import TdmGetAllChannelsWorker, TdmGetDataWorker
-from .utils import get_darkModePalette
-from .mmc_configDialog import MmcConfigDialog
-
+from signal_browser.colorize_delegate import ColorizeDelegate
+from signal_browser.file_type import FileType
+from signal_browser.mmc_processes import MMCProcesses
+from signal_browser.my_custom_classes import CustomStandardItem, CustomStandardItemModel
+from signal_browser.novos_processes import NOVOSProcesses
+from signal_browser.plclog_reader import PlcLogReader_Async
+from signal_browser.qt_dash import DashThread
+from signal_browser.rtilog_reader import MultiThreaded_RTI_Reader, RTILogReader
+from signal_browser.tdmlog_reader import TdmGetAllChannelsWorker, TdmGetDataWorker
+from signal_browser.utils import get_darkModePalette
+from signal_browser.mmc_configDialog import MmcConfigDialog
 
 class MainWindow(QtWidgets.QMainWindow):
     """
@@ -42,6 +42,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.connect_signals()
         self.fig = self.qdask.fig
         self.thread_pool = QtCore.QThreadPool()
+        self.selected_files_label = QLabel()
+        self.statusBar().addWidget(self.selected_files_label)
+
 
     def init_ui_elements_and_vars(self):
         """Initializes the main window and UI elements"""
@@ -206,6 +209,9 @@ class MainWindow(QtWidgets.QMainWindow):
         elif pathlib.Path(self.filename).suffix.lower() == ".zip":
             self.load_PlcLog_file(self.filenames)
             self.file_type = FileType.PLC_LOG
+
+        self.selected_files_label.setText(
+            f"{[pathlib.Path(file).name for file in self.filenames]}")
 
     def open_context_menu(self, position):
         # Get the index of the item at the position where right-click was performed
@@ -549,10 +555,19 @@ class MainWindow(QtWidgets.QMainWindow):
         )
 
     def _add_bool_trace(self, df, item, color):
-        self.fig.add_trace(
-            go.Scatter(mode='lines', name=item.itemData.name, yaxis="y3", line=dict(color=color)),
-            hf_x=df.index,
-            hf_y=df)
+        if df.size == 1:
+            self.fig.add_trace(
+                go.Scatter(mode='markers', name=item.itemData.name, yaxis="y", line=dict(color=color)),
+                hf_x=df.index,
+                hf_y=df.values[0],
+            )
+        else:
+            self.fig.add_trace(
+                go.Scatter(mode='lines', name=item.itemData.name, yaxis="y3", line=dict(color=color)),
+                hf_x=df.index,
+                hf_y=df)
+
+
 
         self.fig.data[-1].update(yaxis="y3")
         self.fig.update_layout(
@@ -589,10 +604,19 @@ class MainWindow(QtWidgets.QMainWindow):
         )
 
     def _add_secondary_y_trace(self, df, item, color):
-        self.fig.add_trace(
-            go.Scatter(mode='lines', name=item.itemData.name, yaxis="y2", line=dict(color=color)),
-            hf_x=df.index,
-            hf_y=df)
+        if df.size == 1:
+            self.fig.add_trace(
+                go.Scatter(mode='markers', name=item.itemData.name, yaxis="y", line=dict(color=color)),
+                hf_x=df.index,
+                hf_y=df.values[0],
+            )
+        else:
+            self.fig.add_trace(
+                go.Scatter(mode='lines', name=item.itemData.name, yaxis="y", line=dict(color=color)),
+                hf_x=df.index,
+                hf_y=df,
+            )
+
 
         self.fig.data[-1].update(yaxis="y2")
         self.fig.update_layout(
@@ -605,11 +629,19 @@ class MainWindow(QtWidgets.QMainWindow):
         )
 
     def _add_default_trace(self, df, item, color):
-        self.fig.add_trace(
-            go.Scatter(mode='lines', name=item.itemData.name, yaxis="y", line=dict(color=color)),
-            hf_x=df.index,
-            hf_y=df,
-        )
+        if df.size == 1:
+            self.fig.add_trace(
+                go.Scatter(mode='markers', name=item.itemData.name, yaxis="y", line=dict(color=color)),
+                hf_x=df.index,
+                hf_y=df.values[0],
+            )
+            
+        else:
+            self.fig.add_trace(
+                go.Scatter(mode='lines', name=item.itemData.name, yaxis="y", line=dict(color=color)),
+                hf_x=df.index,
+                hf_y=df,
+            )
         self.fig.data[-1].update(yaxis="y")
 
     def _remove_trace_by_item_name(self, item):
@@ -626,7 +658,6 @@ class MainWindow(QtWidgets.QMainWindow):
 def main():
     """Main function"""
     import sys
-    import argparse
     import socket
     from contextlib import closing
 
@@ -635,7 +666,7 @@ def main():
 
         while True:
             with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
-                if sock.connect_ex(('localhost', port)) != 0:
+                if sock.connect_ex(("localhost", port)) != 0:
                     return port
                 port += 1
 

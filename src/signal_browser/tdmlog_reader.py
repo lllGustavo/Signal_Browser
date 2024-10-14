@@ -5,7 +5,7 @@ import pandas as pd
 import tdm_loader
 from PySide6.QtCore import QObject, QRunnable, Signal
 
-from .utils import TimeConversionUtils
+from signal_browser.utils import TimeConversionUtils
 
 
 class OpenFile(tdm_loader.OpenFile):

@@ -4,7 +4,7 @@ from collections import defaultdict
 
 import numpy as np
 import pandas as pd
-from .utils import TimeConversionUtils, read_struct_from_binary
+from signal_browser.utils import TimeConversionUtils, read_struct_from_binary
 import pathlib
 
 

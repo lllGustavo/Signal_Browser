@@ -51,19 +51,19 @@ class DashThread(QtCore.QThread):
         self.host = host
         self.port = port
         self._app = dash.Dash()
-        self.fig = FigureResampler(go.Figure(), default_n_shown_samples=1000000)
+        self.fig = FigureResampler(go.Figure(), default_n_shown_samples=10000)
         self.fig.register_update_graph_callback(self._app, "fig")
         # self.fig.register_update_graph_callback(app=self._app, graph_id="fig", coarse_graph_id="trace-updater")
         self.theme_manager = theme_manager
 
         pio.templates["costum"] = go.layout.Template()
-        pio.templates["costum"].layout.legend.update(dict(
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="right",
-            x=1
-        ))
+        pio.templates["costum"].layout.legend.update({
+            "orientation": "h",
+            "yanchor": "bottom",
+            "y": 1.02,
+            "xanchor": "right",
+            "x": 1
+        })
         # pio.templates["costum"].layout.hovermode = 'x unified'
         pio.templates["costum"].layout.margin = dict(l=10, r=10, b=10, t=100)
 
