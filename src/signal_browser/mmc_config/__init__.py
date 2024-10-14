@@ -1,0 +1,1 @@
+from .MmcConfig_UI import Ui_Dialog
